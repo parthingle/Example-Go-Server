@@ -1,0 +1,238 @@
+swagger: "2.0"
+info:
+  version: 1.0.0
+  title: Backend Test API
+  description: Service for receiving trades from the outside world
+host: localhost:8080
+basePath: /v1
+schemes:
+  - http
+consumes:
+  - application/json
+produces:
+  - application/json
+
+paths:
+  /trades:
+    get:
+      tags:
+        - Trades
+      summary: Get all trades
+      description: Get all trades inserted
+      operationId: trades_get_all
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: array
+            items:
+              $ref: "#/definitions/InternalTrade"
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: "#/definitions/Error"
+
+    post:
+      tags:
+        - Trades
+      summary: Insert Trades
+      description: >
+        Insert the provided trades atomically. Use this endpoint if you want atomic trade insert
+      operationId: trades_insert
+      parameters:
+        - in: body
+          name: trades
+          required: true
+          description: Array of trades to upload
+          schema:
+            type: array
+            items:
+              $ref: "#/definitions/Trade"
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: array
+            items:
+              $ref: "#/definitions/TradeSubmitted"
+        "400":
+          description: Bad Request - Improper Types Passed
+          schema:
+            $ref: "#/definitions/Error"
+        "422":
+          description: Not processable - Missing Required
+          schema:
+            $ref: "#/definitions/Error"
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: "#/definitions/Error"
+
+  /trades/{trade_id}:
+    delete:
+      tags:
+        - Trades
+      summary: Delete trade by id
+      description: Cancel a trade that were previously created. Note, you can only cancel a trade that have been accepted.
+      operationId: trades_cancel
+      parameters:
+        - in: path
+          name: trade_id
+          required: true
+          description: Assigned unique trade_id
+          type: string
+      responses:
+        "204":
+          description: OK
+        "404":
+          description: ID Not Found
+          schema:
+            $ref: "#/definitions/Error"
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: "#/definitions/Error"
+    put:
+      tags:
+        - Trades
+      summary: Update a trade by id
+      description: Update a trade by it's unique id
+      operationId: trades_update
+      parameters:
+        - in: path
+          name: trade_id
+          required: true
+          description: Assigned unique trade_id
+          type: string
+        - in: body
+          name: trade
+          required: true
+          description: new trade representation
+          schema:
+            $ref: "#/definitions/Trade"
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: "#/definitions/InternalTrade"
+        "404":
+          description: ID Not Found
+          schema:
+            $ref: "#/definitions/Error"
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: "#/definitions/Error"
+    get:
+      tags:
+        - Trades
+      summary: Get a trade by id
+      description: Get a trade by it's unique id
+      operationId: trades_get
+      parameters:
+        - in: path
+          name: trade_id
+          required: true
+          description: Assigned unique trade_id
+          type: string
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: "#/definitions/InternalTrade"
+        "404":
+          description: ID Not Found
+          schema:
+            $ref: "#/definitions/Error"
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: "#/definitions/Error"
+
+definitions:
+  Error:
+    type: object
+    properties:
+      message:
+        type: string
+        description: Error details, if any
+    example:
+      message: <error-details>
+    required:
+      - message
+
+  InternalTrade:
+    type: object
+    description: Internal representation of a trade including internal id
+    required:
+      - id
+      - trade
+    properties:
+      id:
+        type: string
+        minLength: 1
+        maxLength: 256
+        description: Unique ID for this trade defined by the server.
+        example: "1893"
+        x-nullable: false
+      trade:
+        $ref: "#/definitions/Trade"
+
+  Trade:
+    type: object
+    description: Base trade details; common amongst all trade types.
+    required:
+      - client_trade_id
+      - date
+      - quantity
+      - price
+      - ticker
+    properties:
+      client_trade_id:
+        type: string
+        minLength: 1
+        maxLength: 256
+        description: Unique ID for this trade that you define.
+        example: T-50264430-bc41
+        x-nullable: false
+      date:
+        type: integer
+        minimum: 20010101
+        maximum: 21000101
+        description: Trade date for the trade in YYYYMMDD format
+        example: 20200101
+        x-nullable: false
+      quantity:
+        type: string
+        pattern: "^[-]?[0-9]*\\.?[0-9]+$"
+        description: The quantity of the trade
+        x-nullable: false
+        example: "100"
+      price:
+        type: string
+        pattern: "^[-]?[0-9]*\\.?[0-9]+$"
+        description: The price of the trade
+        x-nullable: false
+        example: "10.00"
+      ticker:
+        type: string
+        description: Ticker (Unique Identifier) traded
+        x-nullable: false
+        example: "AAPL"
+
+  TradeSubmitted:
+    type: object
+    description: Submitted trade details
+    properties:
+      client_trade_id:
+        type: string
+        minLength: 1
+        maxLength: 256
+        description: Unique ID for this trade that you defined.
+        example: "T-50264430-bc41"
+        x-nullable: false
+      trade_id:
+        type: string
+        description: Unique ID for this trade provided by the server.
+        example: "1893"
+        x-nullable: false
