@@ -15,7 +15,7 @@ Paste the src/swagger.yml file at https://editor.swagger.io/ to see API spec thi
 - `golang v1.13.6`
 - `docker >=19`
 
-1. Clone repo: `git clone https://github.com/parthingle/Example-Go-Server.git`
+1. Clone repo: `git clone https://github.com/parthingle/Example-Go-Server.git` into your GOPATH and run `go get`.
 
 2. Auto build to run with docker: `make`. This cleans the environment, runs all tests, generates a binary if tests succeed, and deploys on an alpine container with `localhost:8080` exposed. 
 
